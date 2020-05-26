@@ -1,0 +1,316 @@
+<!--
+ Copyright 2020 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+{% macro modal(title, btn_label=None, btn_class="btn-primary") %}
+{% set key = title.replace(' ', '-').lower() %}
+{% set btn_label = btn_label or title %}
+<div class="modal fade" id="{{key}}-dialog" tabindex="-1" role="dialog" aria-labelledby="{{key}}-label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="{{key}}-label">{{title}}</h4>
+      </div>
+      <div class="modal-body">
+        {{ caller() }}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn {{btn_class}}" data-dismiss="modal" data-dismiss="modal">{{btn_label}}</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+
+    <title>{% block title %}JupyterHub{% endblock %}</title>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% block stylesheet %}
+    <link rel="stylesheet" href="{{ static_url("css/style.min.css") }}" type="text/css"/>
+    {% endblock %}
+    <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{static_url("components/jquery/dist/jquery.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{static_url("components/bootstrap/dist/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script>
+      require.config({
+          {% if version_hash %}
+          urlArgs: "v={{version_hash}}",
+          {% endif %}
+          baseUrl: '{{static_url("js", include_version=False)}}',
+          paths: {
+            components: '../components',
+            jquery: '../components/jquery/dist/jquery.min',
+            bootstrap: '../components/bootstrap/dist/js/bootstrap.min',
+            moment: "../components/moment/moment",
+          },
+          shim: {
+            bootstrap: {
+              deps: ["jquery"],
+              exports: "bootstrap"
+            },
+          }
+      });
+    </script>
+
+    <!-- Added by GCP -->
+    <style>
+      html { font-family: Roboto, sans-serif;}
+      html,body{height:100%;}
+      .navbar{margin-bottom: 0;}
+      .navbar-default {
+          background-color: #1a73e8;
+          border: 0;
+          height: 48px;
+          box-shadow: 0 3px 4px 0 rgba(0,0,0,.2), 0 3px 3px -2px rgba(0,0,0,.14), 0 1px 8px 0 rgba(0,0,0,.12);
+          border-radius: 0;
+      }
+      .navbar-header { margin-top: 3px;}
+      #thenavbar { margin-top: 3px; }
+      #jupyterhub-logo { margin-right: 10px; }
+      .navbar-default .navbar-text { color: #fff; }
+      .navbar-default .navbar-nav>li>a {  
+        color: #fff;
+        font-family: Roboto;
+        font-size: 18px;
+        font-weight: 400;
+        letter-spacing: 0.24px;
+      }
+      
+      .btn-jupyter, #start, .btn-primary { background-color: #3367d6; border-color: #0d55cb; }
+      .btn-jupyter:hover, #start:hover, .btn-primary:hover, 
+      .btn-jupyter:active, #start:active, .btn-primary:active, 
+      .btn-jupyter:focus, #start:focus, .btn-primary:focus { 
+        -webkit-box-shadow:none;-moz-box-shadow:none;box-shadow:none;
+        background-color:#357ae8;
+        background-image:-webkit-linear-gradient(top,#4d90fe,#357ae8);background-image:-moz-linear-gradient(top,#4d90fe,#357ae8);background-image:-ms-linear-gradient(top,#4d90fe,#357ae8);background-image:-o-linear-gradient(top,#4d90fe,#357ae8);background-image:linear-gradient(top,#4d90fe,#357ae8);
+        border:1px solid #2f5bb7;
+        border-bottom-color:#2f5bb7;
+      }
+      .btn-ml-tb {margin:20px 0!important;}
+      #spawn_form { /*text-align: center;*/ }
+      #spawn_form select.form-control { margin-bottom: 10px; }
+      #spawn_form .btn-jupyter { width: 100px; }
+
+      .mm-nplr{
+        padding-left: 0;
+        padding-right: 0;
+      }
+      .mm-static{
+        position:static;
+      }
+
+      .mm-main{
+        height: 100%;
+        margin-top: -50px;
+        padding-top: 50px;
+      }
+
+      .mm-side-menus{
+        max-width:250px;
+        height:100%;
+        background-color:#fafafa;
+        border-right: 1.1px solid rgba(0,0,0,.12);
+      }
+
+      #mm-logo{
+        border-bottom: 1.1px solid rgba(0,0,0,.12);
+        height: 48px;
+        line-height: 45px;
+      }
+      #jupyterhub-logo{margin-left:16px;}
+
+      .nav-sidebar li{margin: 8px 0;}
+      .nav-sidebar li a{
+        color: rgba(0,0,0,.655);
+        text-decoration: none;
+        text-transform: none;
+      }
+
+      .form-section {
+        -webkit-transition: all cubic-bezier(0.4,0.0,0.2,1) .2s;
+        transition: all cubic-bezier(0.4,0.0,0.2,1) .2s;
+        display: block;
+        padding: 12px;
+        -webkit-box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        border: 1px solid #e7e7e7;
+        -webkit-border-radius: 2px;
+        border-radius: 2px;
+        background: #fff;
+        max-width: 440px;
+        margin:10px 0;
+      }
+
+      #customizationBtn{
+        text-decoration: none;
+        color:#3367d6;
+      }
+
+      h1{
+        font-family:Roboto, sans-serif;
+        font-size:18px;
+        font-style:normal;
+        font-weight:400;
+        height:16px;
+        letter-spacing:normal;
+        line-height:16px;
+      }
+
+      .spinner {
+        border: 5px solid #3367d6;
+        border-radius: 50%;
+        border-top: 5px solid #fff;
+        width: 40px;
+        height: 40px;
+        -webkit-animation: spin 1s linear infinite; /* Safari */
+        animation: spin 1s linear infinite;
+      }
+      /* Safari */
+      @-webkit-keyframes spin {
+        0% { -webkit-transform: rotate(0deg); }
+        100% { -webkit-transform: rotate(360deg); }
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+
+    <script type="text/javascript">
+      window.jhdata = {
+        base_url: "{{base_url}}",
+        prefix: "{{prefix}}",
+        {% if user %}
+        user: "{{user.json_escaped_name}}",
+        {% endif %}
+        {% if admin_access %}
+        admin_access: true,
+        {% else %}
+        admin_access: false,
+        {% endif %}
+        {% if not no_spawner_check and user and user.spawner.options_form %}
+        options_form: true,
+        {% else %}
+        options_form: false,
+        {% endif %}
+      }
+    </script>
+
+    {% block meta %}
+    {% endblock %}
+
+</head>
+
+<body>
+
+<noscript>
+  <div id='noscript'>
+    JupyterHub requires JavaScript.<br>
+    Please enable it to proceed.
+  </div>
+</noscript>
+
+{% block nav_bar %}
+<div>
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="" id="thenavbar">
+      <ul class="nav navbar-nav">
+        {% block nav_bar_left_items %}
+          <li><a href="{{base_url}}home">Google Cloud Platform</a></li>
+        {% endblock %}
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        {% block nav_bar_right_items %}
+          <li>
+            {% block login_widget %}
+              <span id="login_widget">
+                {% if user %}
+                  <p class="navbar-text">{{user.name}}</p>
+                  <!-- <a id="logout" role="button" class="navbar-btn btn-sm btn btn-default" href="{{logout_url}}"> <i aria-hidden="true" class="fa fa-sign-out"></i> Logout</a> -->
+                {% else %}
+                  <a id="login" role="button" class="btn-sm btn navbar-btn btn-default" href="{{login_url}}">Login</a>
+                {% endif %}
+              </span>
+            {% endblock %}
+          </li>
+        {% endblock %}
+      </ul>
+    </div>
+
+    {% block header %}
+    {% endblock %}
+  </div>
+</nav>
+</div>
+{% endblock %}
+
+<div class="container-fluid mm-main mm-nplr">
+  <div class="col-xs-4 mm-side-menus mm-nplr mm-static">
+    {% block logo %}
+    <div id="mm-logo">
+      <span id="jupyterhub-logo">
+        <a href="{{logo_url or base_url}}"><img src='{{base_url}}logo' alt='JupyterHub' class='jpy-logo' title='Home'/></a>
+      </span>
+    </div>
+    {% endblock %}
+    {% if user %}
+    <ul class="nav nav-sidebar">
+      <li><a href="{{base_url}}home">Home</a></li>
+      <li><a href="{{base_url}}token">Token</a></li>
+      {% if user.admin %}
+      <li><a href="{{base_url}}admin">Admin</a></li>
+      {% endif %}
+    </ul>
+    {% endif %}
+  </div>
+  <div class="col-xs-8" style="padding: 9px 0 0 24px;">
+    {% block announcement %}
+    {% if announcement %}
+    <div class="container text-center announcement alert alert-warning">
+      {{ announcement | safe }}
+    </div>
+    {% endif %}
+    {% endblock %}
+
+
+    {% block main %}
+    {% endblock %}
+
+    {% call modal('Error', btn_label='OK') %}
+      <div class="ajax-error">
+        The error
+      </div>
+    {% endcall %}
+  </div>
+  
+</div>
+
+{% block script %}
+{% endblock %}
+
+</body>
+
+</html>

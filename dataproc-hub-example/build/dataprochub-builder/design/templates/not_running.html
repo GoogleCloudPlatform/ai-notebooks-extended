@@ -1,0 +1,60 @@
+<!--
+ Copyright 2020 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+{% extends "page.html" %}
+
+{% block main %}
+
+<div class="container">
+  <div class="row">
+    <div class="text-center">
+      {% block heading %}
+      <h1>
+      {% if failed %}
+      Spawn failed
+      {% else %}
+      Server not running
+      {% endif %}
+      </h1>
+      {% endblock %}
+      {% block message %}
+      <p>
+        {% if failed %}
+        The latest attempt to start your server {{ server_name }} has failed.
+        {% if failed_message %}
+          {{ failed_message }}
+        {% endif %}
+        Would you like to retry starting it?
+        {% else %}
+        Your server {{ server_name }} is not running. Would you like to start it?
+        {% endif %}
+      </p>
+      {% endblock %}
+      {% block start_button %}
+      <a id="start" role="button" class="btn btn-primary" href="{{ spawn_url }}">
+        {% if failed %}
+        Relaunch
+        {% else %}
+        Launch
+        {% endif %}
+        Server {{ server_name }}
+      </a>
+      {% endblock %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

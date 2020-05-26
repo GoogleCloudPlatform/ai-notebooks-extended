@@ -1,0 +1,5 @@
+!terraform.tfvars
+!cluster-single-noimage.yaml
+!cluster-standard-cpu.yaml
+!cluster-standard-pvm.yaml
+!cluster-standard-v100.yaml

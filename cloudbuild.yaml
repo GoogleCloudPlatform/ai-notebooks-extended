@@ -1,0 +1,191 @@
+---
+steps:
+################################
+# Steps for Dataproc Hub Example
+################################
+- id: 'manage_context'
+  name: gcr.io/cloud-builders/git
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    if [ -z "$COMMIT_SHA" ]; then
+      echo "COMMIT_SHA is empty, uses the subsitition _BUILD_FOLDERS instead."
+      
+      IFS=$_BUILD_FOLDERS_SEP read -r -a folders <<< "$_BUILD_FOLDERS"
+      for fld in "${folders[@]}"
+      do
+        echo "$fld" >> /workspace/changed_dirs.txt
+      done
+      exit 0
+    fi
+
+    echo "***********************"
+    echo "Branch: $BRANCH_NAME"
+    echo "Commit: $COMMIT_SHA"
+    echo "***********************"
+
+    # Saves list of dirs changed by this commit.
+    git diff --no-commit-id --dirstat -r $COMMIT_SHA --output /workspace/changed_dirs.txt   
+
+# Steps for Dataproc Custom Image
+
+- id: 'build_dataproc_custom_image'
+  name: 'gcr.io/$PROJECT_ID/dataproc-custom-image'
+  entrypoint: 'bash'
+  env:
+  - 'CUSTOM_IMAGE_NAME=${_DCI_CUSTOM_IMAGE_NAME}'
+  - 'DATAPROC_VERSION=$_DCI_DATAPROC_VERSION'
+  - 'BASE_IMAGE_URI=$_DCI_BASE_IMAGE_URI'
+  - 'CUSTOMIZATION_SCRIPT_PATH=$_DCI_CUSTOMIZATION_SCRIPT_PATH'
+  - 'ZONE=$_DCI_ZONE'
+  - 'GCS_LOGS=$_DCI_GCS_LOGS'
+  - 'FAMILY=$_DCI_FAMILY'
+  - 'PROJECT_ID=$PROJECT_ID'
+  - 'OAUTH=$_DCI_OAUTH'
+  - 'MACHINE_TYPE=$_DCI_MACHINE_TYPE'
+  - 'NO_SMOKE_TEST=$_DCI_NO_SMOKE_TEST'
+  - 'NETWORK=$_DCI_NETWORK'
+  - 'SUBNETWORK=$_DCI_SUBNETWORK'
+  - 'NO_EXTERNAL_IP=$_DCI_NO_EXTERNAL_IP'
+  - 'SERVICE_ACCOUNT=$_DCI_SERVICE_ACCOUNT'
+  - 'EXTRA_SOURCES=$_DCI_EXTRA_SOURCES'
+  - 'DISK_SIZE=$_DCI_DISK_SIZE'
+  - 'ACCELERATOR=$_DCI_ACCELERATOR'
+  - 'BASE_IMAGE_URI=$_DCI_BASE_IMAGE_URI'
+  - 'STORAGE_LOCATION=$_DCI_STORAGE_LOCATION'
+  - 'SHUTDOWN_INSTANCE_TIMER_SEC=$_DCI_SHUTDOWN_INSTANCE_TIMER_SEC'
+  - 'DRY_RUN=$_DCI_DRY_RUN'
+  args:
+  - '-c'
+  - |
+    grep ${_FOLDER_DATAPROCHUB}/dataproc-custom-image-builder/ "/workspace/changed_dirs.txt" || exit 0
+    echo "Building dataproc-custom-image-builder..."
+    chmod +x /usr/local/bin/dataproc-custom-image.sh
+    bash /usr/local/bin/dataproc-custom-image.sh
+
+# Steps for DataprocHub
+
+- id: 'build_dataprochub'
+  name: 'gcr.io/cloud-builders/docker'
+  waitFor:
+  - build_dataproc_custom_image
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    working_dir=${_FOLDER_DATAPROCHUB}/dataprochub-builder/
+    grep "${working_dir}" "/workspace/changed_dirs.txt" || exit 0
+    echo "Building dataprochub-builder..."
+    docker build --network=cloudbuild \
+      -t gcr.io/$PROJECT_ID/$_DHB_BASE_IMAGE:$_DHB_TAG \
+      ${working_dir}
+
+
+- id: 'refresh_instance_group'
+  name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    grep ${_FOLDER_DATAPROCHUB}/dataprochub-builder/ "/workspace/changed_dirs.txt" || exit 0
+    if [ ! "$_DHB_UPDATE_MIG" = true ] ; then
+      echo 'Not performing a rolling update.'
+      exit 0
+    fi
+    gcloud compute instance-groups managed rolling-action replace ${_DHB_MIG_NAME} \
+    --region ${_DHB_REGION} \
+    --project ${PROJECT_ID} \
+    --quiet || echo "Managed instance group ${_DHB_MIG_NAME} does not exist"
+
+# Steps for MIG Infrastructure done by Terraform
+
+- id: 'terraform-init'
+  name: 'hashicorp/terraform:$_MIG_TERRAFORM_VERSION'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    working_dir=${_FOLDER_DATAPROCHUB}/infrastructure-builder/mig/
+    grep ${working_dir} "/workspace/changed_dirs.txt" || exit 0
+    cd ${working_dir}
+    echo "--------- cat ---------"
+    ls
+    echo "--------- cat ---------"
+    terraform init -backend-config=bucket=${_MIG_TERRAFORM_STATE_BUCKET}
+
+- id: 'terraform-refresh'
+  name: 'hashicorp/terraform:${_MIG_TERRAFORM_VERSION}'
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    working_dir=${_FOLDER_DATAPROCHUB}/infrastructure-builder/mig/
+    grep ${working_dir} "/workspace/changed_dirs.txt" || exit 0
+    cd ${working_dir}
+    terraform refresh -state=${_MIG_TERRAFORM_STATE_BUCKET}/terraform/state/default.tfstate
+
+- id: 'terraform-rm-jupyterhub-mig-template'
+  name: 'hashicorp/terraform:${_MIG_TERRAFORM_VERSION}'
+  env:
+  - "TF_VAR_project-name=${PROJECT_ID}"
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    working_dir=${_FOLDER_DATAPROCHUB}/infrastructure-builder/mig/
+    grep ${working_dir} "/workspace/changed_dirs.txt" || exit 0
+    cd ${working_dir}
+    terraform state rm module.jupyterhub_mig_template
+
+- id: 'terraform-plan'
+  name: 'hashicorp/terraform:${_MIG_TERRAFORM_VERSION}'
+  env:
+  - "TF_VAR_project-name=${PROJECT_ID}"
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    working_dir=${_FOLDER_DATAPROCHUB}/infrastructure-builder/mig/
+    grep ${working_dir} "/workspace/changed_dirs.txt" || exit 0
+    cd ${working_dir}
+    terraform plan
+
+- id: 'terraform-apply'
+  name: 'hashicorp/terraform:${_MIG_TERRAFORM_VERSION}'
+  env:
+  - "TF_VAR_project-name=${PROJECT_ID}"
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    working_dir=${_FOLDER_DATAPROCHUB}/infrastructure-builder/mig/
+    grep ${working_dir} "/workspace/changed_dirs.txt" || exit 0
+    cd ${working_dir}
+    terraform apply -auto-approve
+  
+#
+# Steps for GKE Hub Example
+# 
+# TODO
+
+# substitutions:
+#   _FOLDER_DATAPROCHUB: dataproc-hub-example/build/
+#   _PREFIX_GKE_HUB_EXAMPLE: gke-hub-example/build/
+#   _DCI_CUSTOM_IMAGE_PREFIX: dataprochub-dataproc-base
+#   _DCI_DATAPROC_VERSION: 1.4.16-debian9
+#   _DCI_ZONE: us-central1-a
+#   _DCI_CUSTOMIZATION_SCRIPT_PATH: dataproc-hub-example/build/dataproc-custom-image-builder/customization-script.sh
+#   _DCI_GCS_LOGS: ${GCS_DATAPROC_CUSTOM_IMAGES}/logs
+#   _DCI_DISK_SIZE: 100
+#   _DHB_UPDATE_MIG: false
+#   _DHB_BASE_IMAGE: dataprochub
+#   _DHB_TAG: latest
+#   _DHB_MIG_NAME: jupyterhub-mig
+#   _DHB_REGION: europe-west1
+#   _MIG_TERRAFORM_VERSION: 0.12.24
+#   _MIG_TERRAFORM_STATE_BUCKET: ${GCS_TFSTATE}
+
+options:
+  # Required for dataproc_custom_image
+  substitution_option: 'ALLOW_LOOSE'
