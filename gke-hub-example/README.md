@@ -55,17 +55,17 @@ Currently, the scripts are run manually. Deployments on Google Kubernetes Engine
 
     a. Locally
 
-        ```sh
-        chmod +x 30-deploy-gke-workloads.sh
-        bash 30-deploy-gke-workloads local true
-        ```
+    ```sh
+    chmod +x 30-deploy-gke-workloads.sh
+    bash 30-deploy-gke-workloads local true
+    ```
     
     b. On GKE
 
-        ```sh
-        chmod +x 30-deploy-gke-workloads.sh
-        bash 30-deploy-gke-workloads gke true
-        ```
+    ```sh
+    chmod +x 30-deploy-gke-workloads.sh
+    bash 30-deploy-gke-workloads gke true
+    ```
 
 1. Check that you see your pods being deployed
 
@@ -79,9 +79,9 @@ Currently, the scripts are run manually. Deployments on Google Kubernetes Engine
 
     b. On GKE, you need to get the URL proxy URL that provides a secure access to JupyterHub. That proxy URL automatically recognize the user authenticated to Google Cloud
 
-        ```sh
-        bash 40-get-hub-url.sh
-        ```
+    ```sh
+    bash 40-get-hub-url.sh
+    ```
 
 ## Clean up
 
