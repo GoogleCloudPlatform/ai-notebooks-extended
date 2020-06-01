@@ -119,10 +119,6 @@ if backend_service_name:
   c.GCPProxiesAuthenticator.backend_service_name = backend_service_name
   c.GCPProxiesAuthenticator.template_to_render = "welcome.html"
 
-admins = os.environ.get('ADMINS', '')
-if admins:
-  c.Authenticator.admin_users = admins.split(',')
-
 elif has_oauth:
   from oauthenticator.google import GoogleOAuthenticator
 
@@ -142,6 +138,10 @@ elif has_oauth:
 else:
   raise web.HTTPError(401, f'Missing one or more parameters for authenticator.')
   #raise RuntimeError(f'Missing one or more parameters for authenticator.')
+
+admins = os.environ.get('ADMINS', '')
+if admins:
+  c.Authenticator.admin_users = admins.split(',')
 
 # PostgreSQL
 # If all the environment variables related to PostgreSQL are set, extracts the
