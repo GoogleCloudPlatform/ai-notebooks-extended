@@ -1,0 +1,67 @@
+<!--
+ Copyright 2020 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+{% extends "page.html" %}
+
+{% block login_widget %}
+{% endblock %}
+
+{% block main %}
+<div class="container col-md-6 col-md-offset-3">
+  <h1 ">Authorize access</h1>
+
+  <h2>
+    A service is attempting to authorize with your
+    JupyterHub account
+  </h2>
+
+  <p>
+    {{ oauth_client.description }} (oauth URL: {{ oauth_client.redirect_uri }})
+    would like permission to identify you.
+    {% if scopes == ["identify"] %}
+    It will not be able to take actions on your behalf.
+    {% endif %}
+  </p>
+
+  <h3>The application will be able to:</h3>
+  <div>
+    <form method="POST" action="">
+      {% for scope in scopes %}
+      <div class="checkbox input-group">
+        <label>
+          <input type="checkbox"
+                 name="scopes"
+                 checked="true"
+                 title="This authorization is required"
+                 disabled="disabled" {# disabled because it's required #}
+                 value="{{ scope }}"
+          />
+          {# disabled checkbox isn't included in form, so this is the real one #}
+          <input type="hidden" name="scopes" value="{{ scope }}"/>
+          <span>
+            {# TODO: use scope description when there's more than one #}
+            See your JupyterHub username and group membership (read-only).
+          </span>
+        </label>
+      </div>
+      {% endfor %}
+      <input type="submit" value="Authorize" class="form-control btn-jupyter"/>
+    </form>
+  </div>
+</div>
+
+
+{% endblock %}

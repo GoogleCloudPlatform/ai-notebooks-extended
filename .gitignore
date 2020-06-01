@@ -7,3 +7,5 @@ cluster-standard-v100.yaml
 dataproc-hub-example/deploy/ain
 dataproc-hub-example/deploy/local
 patch_*
+dataproc-hub-example/build/infrastructure-builder/ain
+dataproc-hub-example/build/infrastructure-builder/local

@@ -22,7 +22,8 @@ from google.cloud import secretmanager_v1beta1 as secretmanager
 
 
 def access_secret_version(project_id, secret_id, version_id):
-    """Accesses the payload for the given secret version if one exists. 
+    """Accesses the payload for the given secret version if one exists.
+
     The version can be a version number as a string (e.g."5") or an alias (e.g.
     "latest").
   """
