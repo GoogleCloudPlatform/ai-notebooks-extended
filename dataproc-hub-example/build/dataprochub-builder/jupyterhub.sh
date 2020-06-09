@@ -14,7 +14,7 @@
 # limitations under the License.
 
 
-set +x
+set -x
 
 readonly metadata_base_url="http://metadata.google.internal/computeMetadata/v1"
 
@@ -195,11 +195,13 @@ function append-to-jupyterhub-config {
   fi
 
   # Sets default project and regions because JupyterHub is hosted on GCP.
-  export PROJECT=$( curl ${metadata_base_url}/project/project-id -H "Metadata-Flavor: Google")
-  set-region-from-metadata
+  export PROJECT=$( curl -s ${metadata_base_url}/project/project-id -H "Metadata-Flavor: Google")
+  set-region-and-zone-from-metadata
+  set-default-subnet
+  set-default-configs
   
   # Checks if runs on AI Notebook by reading a metadata passed as an environment variable.
-  jupyterhub_host_type=$( curl ${metadata_base_url}/instance/attributes/jupyterhub-host-type -H "Metadata-Flavor: Google" )
+  jupyterhub_host_type=$( curl -s ${metadata_base_url}/instance/attributes/jupyterhub-host-type -H "Metadata-Flavor: Google" )
   if [ "$jupyterhub_host_type" == "ain" ]; then
     echo "Running on AI Notebook."
     append-config-ain
@@ -214,15 +216,86 @@ function append-to-jupyterhub-config {
 }
 
 
-# 'set-region-from-metadata'
+# 'set-region-and-zone-from-metadata'
 # If region environment variable is not set, then infer from
 # the region part of the zone obtained from instance metadata.
-function set-region-from-metadata {
+# If the DATAPROC_LOCATIONS_LIST environment variable is not set,
+# then infer a valid suffix from the current zone
+function set-region-and-zone-from-metadata {
+  zone_uri=$( curl -s ${metadata_base_url}/instance/zone -H "Metadata-Flavor: Google") 
+  region=$( echo $zone_uri | sed -En 's:^projects/.+/zones/([a-z]+-[a-z]+[0-9]+)-([a-z])$:\1:p' )
+  zone_suffix=$( echo $zone_uri | sed -En 's:^projects/.+/zones/([a-z]+-[a-z]+[0-9]+)-([a-z])$:\2:p' )
   if [ -z "$JUPYTERHUB_REGION" ];
   then
-    zone_uri=$( curl ${metadata_base_url}/instance/zone -H "Metadata-Flavor: Google") 
-    region=$( echo $zone_uri | sed -En 's:^projects/.+/zones/([a-z]+-[a-z]+[0-9]+)(-[a-z])$:\1:p' )
-    export JUPYTERHUB_REGION=${region}
+    export JUPYTERHUB_REGION="${region}"
+  fi
+  if [ -z "$DATAPROC_LOCATIONS_LIST" ];
+  then
+    echo "DATAPROC_LOCATIONS_LIST not specified, using Hub instance zone suffix -${zone_suffix}"
+    export DATAPROC_LOCATIONS_LIST="${zone_suffix}"
+  fi
+}
+
+
+# 'set-default-subnet'
+# Set the DATAPROC_DEFAULT_SUBNET environment variable
+# Call this function only after JUPYTERHUB_REGION has been set
+# Multiple fallbacks for backwards compatibility if users don't specify a subnet
+# 1. If the subnet is explicitly set by the user, respect that
+# 2. If the instance subnet is specified in metadata (by the UI), use that
+# 3. Attempt to call Compute API to determine which subnet this instance is in
+# 4. If all else fails, set the default subnet to 'default' for the region
+#    that the instance is in and hope for the best
+function set-default-subnet() {
+  # Respect default subnet if explicitly set
+  if [ ! -z "${DATAPROC_DEFAULT_SUBNET}" ];
+  then
+    return 0
+  fi
+
+  # If subnet set in metadata, use that
+  echo "No Dataproc default subnet specified in environment, trying to get subnet URI from instance metadata"
+  local metadata_subnet
+  metadata_subnet=$( curl -s --fail ${metadata_base_url}/instance/attributes/instance-subnet-uri -H "Metadata-Flavor: Google" )
+  local metadata_call_ret=$?
+  if [ "${metadata_call_ret}" -eq "0" ];
+  then
+    echo "Inferred subnet from metadata: ${metadata_subnet}"
+    export DATAPROC_DEFAULT_SUBNET="${metadata_subnet}"
+    return 0
+  fi
+
+  # Attempt to call compute API to determine which subnet this instance is on
+  echo "Couldn't determine subnet from metadata, trying to get subnet URI from compute API."
+  local name=$( curl -s ${metadata_base_url}/instance/name -H "Metadata-Flavor: Google" )
+  local zone=$( curl -s ${metadata_base_url}/instance/zone -H "Metadata-Flavor: Google" | \
+                sed -En 's:^projects/.+/zones/([a-z]+-[a-z]+[0-9]+-[a-z])$:\1:p' )
+  local compute_api_subnet
+  compute_api_subnet=$( gcloud compute instances describe "${name}" --zone="${zone}" --format='value[](networkInterfaces.subnetwork)' )
+  local compute_api_ret=$?
+  if [ "${compute_api_ret}" -eq "0" ];
+  then
+    echo "Inferred subnet by calling Compute API: ${compute_api_subnet}"
+    export DATAPROC_DEFAULT_SUBNET="${compute_api_subnet}"
+    return 0
+  fi
+
+  # As a last-ditch effort, assume the default subnet exists for this project
+  echo "Couldn't get subnet from compute API, falling back to using 'default' subnet."
+  local subnet="https://www.googleapis.com/compute/v1/projects/${PROJECT}/regions/${JUPYTERHUB_REGION}/subnetworks/default"
+  echo "Setting subnet to ${subnet}"
+  export DATAPROC_DEFAULT_SUBNET="${subnet}"
+}
+
+
+# 'set-default-configs'
+# If the user didn't specify any relevant configs, point them torwards a fixed
+# set of public example configs
+function set-default-configs() {
+  if [ -z "${DATAPROC_CONFIGS}" ];
+  then
+    echo "Dataproc configs not specified, falling back to public configs"
+    export DATAPROC_CONFIGS="gs://dataproc-spawner-dist/example-configs/single-node-cluster.yaml,gs://dataproc-spawner-dist/example-configs/standard-cluster.yaml"
   fi
 }
 
