@@ -19,12 +19,18 @@ echo "--------------------------------"
 echo "Using project ${PROJECT_ID}"
 echo "--------------------------------"
 
-# Installs kubectl
+echo "--------------------------------"
+echo "Installs kubectl"
+echo "--------------------------------"
 curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
 chmod +x ./kubectl
 sudo mv ./kubectl /usr/local/bin/kubectl
+# sudo apt-get update
+# sudo apt-get install kubectl -y
 
-# Installs minikube tools.
+echo "--------------------------------"
+echo "Installs minikube tools."
+echo "--------------------------------"
 # curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 \
 curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-darwin-amd64 \
   && chmod +x minikube
@@ -32,11 +38,10 @@ curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/miniku
 sudo mkdir -p /usr/local/bin/
 sudo install minikube /usr/local/bin/
 
-# Installs kustomize
+echo "--------------------------------"
+echo "Installs kustomize."
+echo "--------------------------------"
 curl -s "https://raw.githubusercontent.com/\
 kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
 chmod +x ./kustomize
 sudo mv ./kustomize /usr/local/bin/kustomize
-
-# Installs Kubectl
-gcloud components install kubectl --quiet
