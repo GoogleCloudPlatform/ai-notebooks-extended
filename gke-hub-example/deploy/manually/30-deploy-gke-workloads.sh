@@ -39,6 +39,14 @@ if [ "$TARGET" == "gke" ]; then
   fi 
 
   # Create images if asked
+  if [ "$MUST_BUILD" == "hub" ]; then
+    gcloud builds submit -t ${DOCKER_HUB_GKE} ${DOCKER_FOLDER_HUB}
+  fi
+
+  if [ "$MUST_BUILD" == "agent" ]; then
+    gcloud builds submit -t ${DOCKER_AGENT_GKE} ${DOCKER_FOLDER_AGENT}
+  fi
+
   if [ "$MUST_BUILD" == "true" ]; then
     gcloud builds submit -t ${DOCKER_HUB_GKE} ${DOCKER_FOLDER_HUB}
     gcloud builds submit -t ${DOCKER_AGENT_GKE} ${DOCKER_FOLDER_AGENT}
@@ -57,6 +65,9 @@ spec:
       - name: jupyterlab-hub
         image: ${DOCKER_HUB_GKE}
         imagePullPolicy: IfNotPresent
+        env:
+        - name: spawnable_profiles
+          value: ${DOCKERS_JUPYTER_GKE}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -69,9 +80,6 @@ spec:
       - name: proxy-agent-hub
         image: ${DOCKER_AGENT_GKE}
         imagePullPolicy: Always
-        env:
-        - name: spawnable_profiles
-          value: ${DOCKERS_JUPYTER_GKE}
 EOT
 
   # Deploys.
@@ -85,12 +93,16 @@ elif [ "$TARGET" == "local" ]; then
   # Sets Minikube environment
   USER=$(id -un)
   if [ "$(minikube status | grep host)" != "host: Running" ]; then
-    minikube start
+    minikube start --disk-size=100g
   fi
 
   eval $(minikube docker-env)
 
-   # Create images if asked
+  # Create images if asked
+  if [ "$MUST_BUILD" == "hub" ]; then
+    docker build -t ${IMAGE_HUB_NAME:IMAGE_HUB_TAG} ${DOCKER_FOLDER_HUB}
+  fi
+  
   if [ "$MUST_BUILD" == "true" ]; then
     docker build -t ${IMAGE_HUB_NAME:IMAGE_HUB_TAG} ${DOCKER_FOLDER_HUB}
     
@@ -124,7 +136,7 @@ EOT
   kustomize build ${FOLDER_MANIFESTS_LOCAL} | kubectl apply -f -
   kubectl delete services jupyterlab-hub
   kubectl expose deployment jupyterlab-hub --type=LoadBalancer --port=8080
-  minikube service jupyterlab-hub
+  minikube service --url=false jupyterlab-hub
 
 ###################################
 # Catch all target.

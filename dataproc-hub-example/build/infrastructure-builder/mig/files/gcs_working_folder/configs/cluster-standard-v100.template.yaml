@@ -34,8 +34,8 @@ config:
       numLocalSsds: 0
     imageUri: projects/<YOUR-PROJECT>/global/images/jupyterhub-dataproc-base
     accelerators:
-      - acceleratorTypeUri: nvidia-tesla-v100
-        acceleratorCount: 1
+    - acceleratorTypeUri: nvidia-tesla-v100
+      acceleratorCount: 1
   workerConfig:
     numInstances: 2
     machineTypeUri: n1-standard-4

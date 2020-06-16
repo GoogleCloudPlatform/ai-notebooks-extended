@@ -49,7 +49,7 @@ Currently, the scripts are run manually. Deployments on Google Kubernetes Engine
 
 1. Create Jupyter environments in the ./docker/jupyter folder. There is already a jupyter-mine-basic as an example. You can use official [AI Notebook servers images][ain] as a base for your Dockerfile.
 
-1. Modify the IMAGES_JUPYTER variable in [10-set-variables](set_variables) to add the relevant image names as comma separated list. This method is recommend if you are trying things locally. To add limits and other profile information, you can modify directly the [jupyter_config.py](jupyter_config) and add profiles directly there. See the profile_list parameter in the [Kubespawner documentation](https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html).
+1. Modify the IMAGES_JUPYTER variable in [10-set-variables](set_variables) to add the relevant image names as comma separated list. This method is recommended if you are trying things locally. To add limits and other profile information, you can modify directly the [jupyter_config.py](jupyter_config) and add profiles directly there. See the profile_list parameter in the [Kubespawner documentation](https://jupyterhub-kubespawner.readthedocs.io/en/latest/spawner.html).
 
 1. Create docker images and deploy workloads
 

@@ -36,8 +36,4 @@ else
 
 fi
 
-
-
-
-
 kubectl delete configmaps inverse-proxy-config-hub
