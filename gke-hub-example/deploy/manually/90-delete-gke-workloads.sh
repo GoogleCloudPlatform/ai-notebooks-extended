@@ -15,6 +15,7 @@
 #
 # Usage: bash 90-delete-gke-workloads.sh TARGET
 # Example: bash 90-delete-gke-workloads.sh local
+# Example: bash 90-delete-gke-workloads.sh gke
 
 source 10-set-variables.sh
 

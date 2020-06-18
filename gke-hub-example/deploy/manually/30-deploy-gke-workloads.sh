@@ -15,6 +15,7 @@
 #
 # Usage: bash 30-deploy-gke-workloads.sh TARGET MUST_BUILD"
 # Example: bash 30-deploy-gke-workloads.sh local true"
+# Example: bash 30-deploy-gke-workloads.sh gke true"
 
 source 10-set-variables.sh
 

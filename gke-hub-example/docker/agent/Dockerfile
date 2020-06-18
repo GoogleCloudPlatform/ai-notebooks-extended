@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Pin to a specific version of invert proxy agent
-FROM gcr.io/inverting-proxy/agent
+FROM gcr.io/inverting-proxy/agent:dataproc-notebooks
 
 RUN apt-get update && apt-get install -y curl jq python-pip vim
 RUN pip install requests
