@@ -22,7 +22,10 @@ source 10-set-variables.sh
 TARGET=$1
 MUST_BUILD=$2
 
-echo "Deploying for TARGET ${TARGET} and MUST_BUILD is set to ${MUST_BUILD}"
+echo "Deploying for TARGET:${TARGET}"
+echo "Working with cluster: ${CLUSTER_NAME}"
+echo "Image to build MUST_BUILD: ${MUST_BUILD}"
+echo "Working Identity is set to: ${WID}"
 echo "--------------------------------"
 
 ###################################
@@ -53,38 +56,13 @@ if [ "$TARGET" == "gke" ]; then
     gcloud builds submit -t ${DOCKER_AGENT_GKE} ${DOCKER_FOLDER_AGENT}
   fi
 
-  # Creates Kustmomize `GKE` patches
-  cat <<EOT > ${FOLDER_MANIFESTS_GKE}/patch_gke.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: jupyterlab-hub
-spec:
-  template:
-    spec:
-      containers:
-      - name: jupyterlab-hub
-        image: ${DOCKER_HUB_GKE}
-        imagePullPolicy: IfNotPresent
-        env:
-        - name: spawnable_profiles
-          value: ${DOCKERS_JUPYTER_GKE}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: proxy-agent-hub
-spec:
-  template:
-    spec:
-      containers:
-      - name: proxy-agent-hub
-        image: ${DOCKER_AGENT_GKE}
-        imagePullPolicy: Always
-EOT
-
-  # Deploys.
-  kustomize build ${FOLDER_MANIFESTS_GKE} | kubectl apply -f -
+  # Deploys the workloads. The flow depends on whether Workload Identity is enabled.
+  # With Workload Identity, extra steps are required (annoation and workloadIdentityUser)
+  if [ "$WID" == "true" ]; then
+    source 35-use-wid.sh
+  else
+    source 35-use-non-wid.sh
+  fi
 
 ###################################
 # Deploys locally
@@ -126,7 +104,7 @@ spec:
       containers:
       - name: jupyterlab-hub
         image: ${IMAGE_HUB_NAME}:${IMAGE_HUB_TAG}
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         env:
         - name: spawnable_profiles
           value: ${DOCKERS_JUPYTER_LOCAL}

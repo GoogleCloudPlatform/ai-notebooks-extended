@@ -15,8 +15,13 @@
 
 source 10-set-variables.sh
 
-gcloud container clusters get-credentials ${CLUSTER_NAME} \
+gcloud container clusters update ${CLUSTER_NAME} \
+--workload-pool=${PROJECT_ID}.svc.id.goog \
 --project ${PROJECT_ID} \
 --zone ${ZONE}
 
-echo $(kubectl describe configmap inverse-proxy-config-hub | grep googleusercontent.com)
+gcloud container node-pools update default-pool \
+--cluster=${CLUSTER_NAME} \
+--project ${PROJECT_ID} \
+--zone ${ZONE} \
+--workload-metadata=GKE_METADATA

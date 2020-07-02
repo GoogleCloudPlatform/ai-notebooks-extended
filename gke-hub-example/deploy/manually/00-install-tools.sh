@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 PROJECT_ID=$(gcloud config list --format 'value(core.project)')
 echo "--------------------------------"
 echo "Using project ${PROJECT_ID}"
