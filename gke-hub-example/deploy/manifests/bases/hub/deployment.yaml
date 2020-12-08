@@ -33,4 +33,12 @@ spec:
         # Notebook profiles added by kustomize here.
         ports:
         - containerPort: 8080
+        volumeMounts:
+          - name: config-volume
+            mountPath: /configmaps/jupyterhub
       serviceAccountName: hub-runner
+      volumes:
+        - name: config-volume
+          configMap:
+            name: hub-config
+
