@@ -14,10 +14,9 @@
 
 FROM jupyter/base-notebook
 
+USER root
 COPY jupyter_notebook_config.py /etc/jupyter/
+RUN fix-permissions /etc/jupyter/
+USER $NB_UID
 
 EXPOSE 8080
-
-# # Configure container startup
-# ENTRYPOINT ["tini", "-g", "--"]
-# CMD ["start-notebook.sh"]
