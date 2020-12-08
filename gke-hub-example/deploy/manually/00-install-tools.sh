@@ -30,9 +30,15 @@ sudo mv ./kubectl /usr/local/bin/kubectl
 echo "--------------------------------"
 echo "Installs minikube tools."
 echo "--------------------------------"
-# curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 \
-curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-darwin-amd64 \
-  && chmod +x minikube
+case `uname -s` in
+  Linux*) 
+    curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+  ;;
+  Darwin*)
+    curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-darwin-amd64
+  ;;
+esac
+chmod +x minikube
 
 sudo mkdir -p /usr/local/bin/
 sudo install minikube /usr/local/bin/
