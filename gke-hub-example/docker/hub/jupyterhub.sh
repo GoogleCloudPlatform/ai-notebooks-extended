@@ -23,6 +23,10 @@ sigint_handler()
 
 trap sigint_handler SIGINT
 
+if [[ -f $CONFIGFILE ]]; then
+    cp $CONFIGFILE /srv/jupyterhub/jupyterhub_config.py
+fi
+
 while true; do
   jupyterhub &
   PID=$!

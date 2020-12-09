@@ -71,7 +71,6 @@ c.Spawner.default_url = os.environ.get('SPAWNER_DEFAULT_URL', '/lab')
 
 # The port that the spawned notebook listens on for the hub to connect
 c.Spawner.port = 8080
-c.KubeSpawner.port = 8080
 
 # c.NotebookApp.ip = '0.0.0.0'
 # c.NotebookApp.port = 8080

@@ -19,4 +19,4 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} \
 --project ${PROJECT_ID} \
 --zone ${ZONE}
 
-echo $(kubectl describe configmap inverse-proxy-config-hub | grep googleusercontent.com)
+echo https://$(kubectl describe configmap inverse-proxy-config-hub | grep googleusercontent.com)

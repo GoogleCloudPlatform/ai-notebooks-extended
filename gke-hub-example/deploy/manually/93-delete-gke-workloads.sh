@@ -25,12 +25,6 @@ if [ "$TARGET" == "gke" ]; then
 
   if [ "$WID" == "true" ]; then
 
-    kubectl delete -f ../manifests/bases/agent/rolebinding.yaml
-    kubectl delete -f ../manifests/bases/agent/role.yaml
-    kubectl apply -f ../manifests/bases/agent/sa.yaml
-    
-    kubectl apply -f ${FOLDER_MANIFESTS_GKE_WI}/agent-deployment.yaml
-
     kustomize build ${FOLDER_MANIFESTS_GKE_WI} | kubectl delete -f -
     rm ${FOLDER_MANIFESTS_GKE_WI}/patch_gke.yaml
 

@@ -29,7 +29,20 @@ if [ "$WID" == "true" ]; then
   echo "Creating a Workload Identity enabled cluster."
   echo "---------------------------------------------"
 
-  gcloud beta container clusters create ${CLUSTER_NAME} \
+  WID_FLAGS="--addons ConfigConnector \
+  --workload-pool=${PROJECT_ID}.svc.id.goog \
+  --workload-metadata=GCE_METADATA \
+  --enable-stackdriver-kubernetes"
+
+else
+
+  echo "---------------------------------------------"
+  echo "Creating a cluster without Workload Identity."
+  echo "---------------------------------------------"
+
+fi
+
+gcloud beta container clusters create ${CLUSTER_NAME} \
   --project ${PROJECT_ID} \
   --zone ${ZONE} \
   --release-channel regular \
@@ -38,29 +51,21 @@ if [ "$WID" == "true" ]; then
   --scopes cloud-platform,userinfo-email \
   --service-account ${SA_GKE_NODES}@${PROJECT_ID}.iam.gserviceaccount.com \
   --machine-type n1-standard-4 \
-  --addons ConfigConnector \
-  --workload-pool=${PROJECT_ID}.svc.id.goog \
-  --workload-metadata=GCE_METADATA \
-  --enable-stackdriver-kubernetes
+  ${WID_FLAGS}
 
-else
-
-  echo "---------------------------------------------"
-  echo "Creating a cluster without Workload Identity."
-  echo "---------------------------------------------"
-
-  gcloud beta container clusters create ${CLUSTER_NAME} \
-  --project ${PROJECT_ID} \
-  --zone ${ZONE} \
-  --release-channel regular \
-  --enable-ip-alias \
-  --num-nodes 1 \
-  --scopes cloud-platform,userinfo-email \
-  --service-account ${SA_GKE_NODES}@${PROJECT_ID}.iam.gserviceaccount.com \
-  --machine-type n1-standard-4
-
-fi
 
 gcloud container clusters get-credentials ${CLUSTER_NAME} \
---project ${PROJECT_ID} \
---zone ${ZONE}
+  --project ${PROJECT_ID} \
+  --zone ${ZONE}
+
+gcloud beta container node-pools create user-pool \
+  --machine-type n1-standard-2 \
+  --num-nodes 0 \
+  --enable-autoscaling \
+  --min-nodes 0 \
+  --max-nodes 3 \
+  --zone ${ZONE} \
+  --node-taints hub.jupyter.org_dedicated=user:NoSchedule \
+  --node-labels hub.jupyter.org/node-purpose=user \
+  --cluster ${CLUSTER_NAME}
+  #${WID_FLAGS}
