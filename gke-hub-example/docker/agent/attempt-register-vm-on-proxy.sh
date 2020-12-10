@@ -71,6 +71,7 @@ if kubectl get configmap inverse-proxy-config-hub; then
   exit 0
 fi
 
+# This appears to never run.
 # Activates service account for gcloud SDK first
 if [[ ! -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
   gcloud auth activate-service-account --key-file="${GOOGLE_APPLICATION_CREDENTIALS}"

@@ -17,6 +17,7 @@ resources:
 - ../../bases/agent
 - ../../bases/services
 - ../../bases/configmap
+- ../../bases/sa
 
 patchesStrategicMerge:
 - patch_gke.yaml

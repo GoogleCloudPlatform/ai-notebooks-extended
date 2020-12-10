@@ -13,20 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# TODO(mayran): Look into using the Config Connector
-gcloud iam service-accounts add-iam-policy-binding \
---role roles/iam.workloadIdentityUser \
---member "serviceAccount:${PROJECT_ID}.svc.id.goog[default/agent-runner]" \
-${SA_GKE_NODES}@${PROJECT_ID}.iam.gserviceaccount.com
-
-# TODO(mayran): Look into moving this directly to YAML file.
-# kubectl annotate serviceaccount \
-#--namespace default \
-#agent-runner \
-#iam.gke.io/gcp-service-account=${SA_GKE_NODES}@${PROJECT_ID}.iam.gserviceaccount.com
-
 # Creates Kustmomize `GKE` patches for the Hub
-cat <<EOT > ${FOLDER_MANIFESTS_GKE_WI}/patch_gke.yaml
+cat <<EOT > ${FOLDER_MANIFESTS_GKE}/patch_gke.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -58,23 +46,26 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    iam.gke.io/gcp-service-account: ${SA_GKE_NODES}@${PROJECT_ID}.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: ${SA_GKE_HUB}@${PROJECT_ID}.iam.gserviceaccount.com
   name: agent-runner
   namespace: default
-secrets:
-- name: agent-runner-token-lr498
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    iam.gke.io/gcp-service-account: ${SA_GKE_NODES}@${PROJECT_ID}.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: ${SA_GKE_HUB}@${PROJECT_ID}.iam.gserviceaccount.com
   name: hub-runner
   namespace: default
-secrets:
-- name: hub-runner-token-nw77c
-
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    iam.gke.io/gcp-service-account: ${SA_GKE_SU}@${PROJECT_ID}.iam.gserviceaccount.com
+  name: singleuser-runner
+  namespace: default
 EOT
 
 # Deploys.
-kustomize build ${FOLDER_MANIFESTS_GKE_WI} | kubectl apply -f -
+kustomize build ${FOLDER_MANIFESTS_GKE} | kubectl apply -f -

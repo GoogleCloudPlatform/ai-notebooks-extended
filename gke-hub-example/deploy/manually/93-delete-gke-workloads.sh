@@ -23,17 +23,9 @@ TARGET=$1
 
 if [ "$TARGET" == "gke" ]; then
 
-  if [ "$WID" == "true" ]; then
+  kustomize build ${FOLDER_MANIFESTS_GKE} | kubectl delete -f -
+  rm ${FOLDER_MANIFESTS_GKE}/patch_gke.yaml
 
-    kustomize build ${FOLDER_MANIFESTS_GKE_WI} | kubectl delete -f -
-    rm ${FOLDER_MANIFESTS_GKE_WI}/patch_gke.yaml
-
-  else
-
-    kustomize build ${FOLDER_MANIFESTS_GKE} | kubectl delete -f -
-    rm ${FOLDER_MANIFESTS_GKE}/patch_gke.yaml
-
-  fi
 
 elif [ "$TARGET" == "local" ]; then
 

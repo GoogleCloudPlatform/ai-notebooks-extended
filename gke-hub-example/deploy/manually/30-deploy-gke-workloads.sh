@@ -56,13 +56,11 @@ if [ "$TARGET" == "gke" ]; then
     gcloud builds submit -t ${DOCKER_AGENT_GKE} ${DOCKER_FOLDER_AGENT}
   fi
 
-  # Deploys the workloads. The flow depends on whether Workload Identity is enabled.
-  # With Workload Identity, extra steps are required (annoation and workloadIdentityUser)
-  if [ "$WID" == "true" ]; then
-    source 35-use-wid.sh
-  else
-    source 35-use-non-wid.sh
-  fi
+  # Deploys the workloads.
+
+  # NOTE: Workload Identity is disable for the default pool
+  # because inverting proxy requires VMID obtained from GCE_METADATA server.
+  source 35-use-wid.sh
 
 ###################################
 # Deploys locally
@@ -81,10 +79,10 @@ elif [ "$TARGET" == "local" ]; then
   if [ "$MUST_BUILD" == "hub" ]; then
     docker build -t ${IMAGE_HUB_NAME:IMAGE_HUB_TAG} ${DOCKER_FOLDER_HUB}
   fi
-  
+
   if [ "$MUST_BUILD" == "true" ]; then
     docker build -t ${IMAGE_HUB_NAME:IMAGE_HUB_TAG} ${DOCKER_FOLDER_HUB}
-    
+
     # Build the jupyter images after minikube docker-env
     for image_jupyter in "${IMAGES_JUPYTER[@]}"; do
       echo "Building Jupyter profile ${image_jupyter}"
@@ -92,30 +90,7 @@ elif [ "$TARGET" == "local" ]; then
     done
   fi
 
-  # Creates Kustmomize `local` patches
-  cat <<EOT > ${FOLDER_MANIFESTS_LOCAL}/patch_local.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: jupyterlab-hub
-spec:
-  template:
-    spec:
-      containers:
-      - name: jupyterlab-hub
-        image: ${IMAGE_HUB_NAME}:${IMAGE_HUB_TAG}
-        imagePullPolicy: Always
-        env:
-        - name: spawnable_profiles
-          value: ${DOCKERS_JUPYTER_LOCAL}
-EOT
-  
-  # Deploys
-  # kustomize build ${FOLDER_MANIFESTS_LOCAL} | kubectl apply -f -
-  kustomize build ${FOLDER_MANIFESTS_LOCAL} | kubectl apply -f -
-  kubectl delete services jupyterlab-hub
-  kubectl expose deployment jupyterlab-hub --type=LoadBalancer --port=8080
-  minikube service --url=false jupyterlab-hub
+  source 35-use-minikube.sh
 
 ###################################
 # Catch all target.

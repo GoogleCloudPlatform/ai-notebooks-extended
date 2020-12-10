@@ -60,7 +60,7 @@ RUN pip install git+https://github.com/GoogleCloudPlatform/jupyterhub-gcp-proxie
 RUN pip install jupyterhub-kubespawner
 
 # JupyterHub design
-# COPY design/templates/ /etc/jupyterhub/templates/
+COPY design/templates/ /etc/jupyterhub/templates/
 
 # the default config. Will be overwritten by a configmap.
 COPY jupyterhub_config.py /srv/jupyterhub/
