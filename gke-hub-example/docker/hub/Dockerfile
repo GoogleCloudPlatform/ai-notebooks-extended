@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM jupyterhub/jupyterhub:latest
+FROM jupyterhub/jupyterhub:1.2.2
 
 # Install gcloud
 RUN apt-get update && apt-get install -y curl apt-transport-https ca-certificates gnupg \
