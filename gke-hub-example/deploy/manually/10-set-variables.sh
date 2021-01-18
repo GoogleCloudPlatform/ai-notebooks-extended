@@ -56,14 +56,14 @@ export IMAGE_AGENT_TAG="latest"
 export DOCKER_HUB_GKE="gcr.io/${PROJECT_ID}/${IMAGE_HUB_NAME}:${IMAGE_HUB_TAG}"
 export DOCKER_AGENT_GKE="gcr.io/${PROJECT_ID}/${IMAGE_AGENT_NAME}:${IMAGE_AGENT_TAG}"
 
-# Docker images for Jupyter. 
-# Can hardcode in jupyterhub_config.py profiles 
+# Docker images for Jupyter.
+# Can hardcode in jupyterhub_config.py profiles
 # but easier to test locally if using env variables.
 # export IMAGES_JUPYTER=(jupyter-mine-basic jupyter-ain-tf-cpu)
-export IMAGES_THIRD_PARTY="gcr.io/deeplearning-platform-release/tf2-cpu"
+# export IMAGES_THIRD_PARTY="gcr.io/deeplearning-platform-release/tf2-cpu"
 export IMAGES_JUPYTER=(jupyter-mine-basic)
-export DOCKERS_JUPYTER_LOCAL=$(printf %s, ${IMAGES_JUPYTER[@]} | sed s/.$//)
-export DOCKERS_JUPYTER_GKE=$(printf gcr.io/${PROJECT_ID}/%s, ${IMAGES_JUPYTER[@]} | sed s/.$//)
+export DOCKERS_JUPYTER_LOCAL=$(printf %s, "${IMAGES_JUPYTER[@]}" | sed s/.$//)
+export DOCKERS_JUPYTER_GKE=$(printf "gcr.io/${PROJECT_ID}/%s", "${IMAGES_JUPYTER[@]}" | sed s/.$//)
 
 if [ ! -z "$IMAGES_THIRD_PARTY" ]; then
   DOCKERS_JUPYTER_LOCAL=${DOCKERS_JUPYTER_LOCAL}",${IMAGES_THIRD_PARTY}"

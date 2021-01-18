@@ -12,3 +12,4 @@ darwin_amd64
 terraform.tfstate
 terraform.tfstate.backup
 dataproc-hub-example/build/infrastructure-builder/ain/files/gcs_working_folder/env-hub.list
+minikube

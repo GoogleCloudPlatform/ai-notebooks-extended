@@ -21,17 +21,24 @@ echo "--------------------------------"
 echo "--------------------------------"
 echo "Installs kubectl"
 echo "--------------------------------"
-curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+case $(uname -s) in
+  Linux*)
+    echo "Installing for Linux."
+    curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+  ;;
+  Darwin*)
+    echo "Installing for MacOs."
+    curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/darwin/amd64/kubectl"
+  ;;
+esac
 chmod +x ./kubectl
 sudo mv ./kubectl /usr/local/bin/kubectl
-# sudo apt-get update
-# sudo apt-get install kubectl -y
 
 echo "--------------------------------"
 echo "Installs minikube tools."
 echo "--------------------------------"
-case `uname -s` in
-  Linux*) 
+case $(uname -s) in
+  Linux*)
     curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
   ;;
   Darwin*)

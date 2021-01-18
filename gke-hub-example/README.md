@@ -5,7 +5,7 @@
 This folder shows how to deploy notebooks on Google Kubernetes Engine by combining:
 
 1. AI Notebooks architecture: Leverages a modified version of the [Inverting Proxy server][proxy_server] managed by Google and a local [Inverting Proxy agent][proxy_agent] to provide a secure endpoint access to a Hub.
-1. Hub architecture: Using [JupyterHub][jupyterhub], adminstrators can provide a centrally-managed list of notebook environment that end users can spawn on a Kubernetes clusters. 
+1. Hub architecture: Using [JupyterHub][jupyterhub], adminstrators can provide a centrally-managed list of notebook environment that end users can spawn on a Kubernetes clusters.
 
 Administrator can modify official [AI Notebook servers images][ain] to run them on a Google Kubernetes Engine cluster.
 
@@ -22,9 +22,9 @@ Currently, the scripts are run manually. Deployments on Google Kubernetes Engine
 
 1. From your Cloud Shell, clone this repository
 
-    ```sh 
+    ```sh
     git clone https://github.com/GoogleCloudPlatform/ai-notebooks-extended.git
-    cd gke-hub-example/deploy
+    cd gke-hub-example/deploy/manually
     ```
 
 1. Set your working project
@@ -57,14 +57,14 @@ Currently, the scripts are run manually. Deployments on Google Kubernetes Engine
 
     ```sh
     chmod +x 30-deploy-gke-workloads.sh
-    bash 30-deploy-gke-workloads local true
+    bash 30-deploy-gke-workloads.sh local true
     ```
-    
+
     b. On GKE
 
     ```sh
     chmod +x 30-deploy-gke-workloads.sh
-    bash 30-deploy-gke-workloads gke true
+    bash 30-deploy-gke-workloads.sh gke true
     ```
 
 1. Check that you see your pods being deployed
@@ -88,7 +88,7 @@ Currently, the scripts are run manually. Deployments on Google Kubernetes Engine
 1. Delete workloads
 
     ```sh
-    bash 90-delete-gke-workloads.sh [local|gke]
+    bash 93-delete-gke-workloads.sh [local|gke]
     ```
 
 1. Delete cluster
