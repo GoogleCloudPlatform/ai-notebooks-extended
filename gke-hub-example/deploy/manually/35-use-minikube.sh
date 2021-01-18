@@ -12,12 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# Usage: bash 30-deploy-gke-workloads.sh TARGET MUST_BUILD"
-# Example: bash 30-deploy-gke-workloads.sh local true"
-# Example: bash 30-deploy-gke-workloads.sh gke true"
 
-cat <<EOT > ${FOLDER_MANIFESTS_GKE}/patch_gke.yaml
+# Creates Kustmomize `local` patches
+cat <<EOT > ${FOLDER_MANIFESTS_LOCAL}/patch_local.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -27,24 +24,16 @@ spec:
     spec:
       containers:
       - name: jupyterlab-hub
-        image: ${DOCKER_HUB_GKE}
+        image: ${IMAGE_HUB_NAME}:${IMAGE_HUB_TAG}
         imagePullPolicy: Always
         env:
         - name: spawnable_profiles
-          value: ${DOCKERS_JUPYTER_GKE}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: proxy-agent-hub
-spec:
-  template:
-    spec:
-      containers:
-      - name: proxy-agent-hub
-        image: ${DOCKER_AGENT_GKE}
-        imagePullPolicy: Always
+          value: ${DOCKERS_JUPYTER_LOCAL}
 EOT
 
-# Deploys.
-kustomize build ${FOLDER_MANIFESTS_GKE} | kubectl apply -f -
+# Deploys
+kustomize build ${FOLDER_MANIFESTS_LOCAL} | kubectl apply -f -
+kubectl delete services jupyterlab-hub
+kubectl expose deployment jupyterlab-hub --type=LoadBalancer --port=8080
+minikube service --url=false jupyterlab-hub
+

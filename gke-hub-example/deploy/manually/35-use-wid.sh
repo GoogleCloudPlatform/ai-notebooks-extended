@@ -13,52 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cat <<EOT > ${FOLDER_MANIFESTS_GKE_WI}/agent-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: proxy-agent-hub
-  labels:
-    app: proxy-agent-hub
-spec:
-  selector:
-    matchLabels:
-      app: proxy-agent-hub
-  template:
-    metadata:
-      labels:
-        app: proxy-agent-hub
-    spec:
-      containers:
-      - name: proxy-agent-hub
-        image: ${DOCKER_AGENT_GKE}
-        imagePullPolicy: Always
-        env:
-        - name: JUPYTERLAB_HUB_SERVICE_NAME
-          value: jupyterlab-hub
-      serviceAccountName: agent-runner
-EOT
-
-kubectl apply -f ../manifests/bases/agent/sa.yaml
-kubectl apply -f ../manifests/bases/agent/role.yaml
-kubectl apply -f ../manifests/bases/agent/rolebinding.yaml
-
-# TODO(mayran): Look into using the Config Connector
-gcloud iam service-accounts add-iam-policy-binding \
---role roles/iam.workloadIdentityUser \
---member "serviceAccount:${PROJECT_ID}.svc.id.goog[default/agent-runner]" \
-${SA_GKE_NODES}@${PROJECT_ID}.iam.gserviceaccount.com
-
-# TODO(mayran): Look into moving this directly to YAML file.
-kubectl annotate serviceaccount \
---namespace default \
-agent-runner \
-iam.gke.io/gcp-service-account=${SA_GKE_NODES}@${PROJECT_ID}.iam.gserviceaccount.com
-
-kubectl apply -f ${FOLDER_MANIFESTS_GKE_WI}/agent-deployment.yaml
-
 # Creates Kustmomize `GKE` patches for the Hub
-cat <<EOT > ${FOLDER_MANIFESTS_GKE_WI}/patch_gke.yaml
+cat <<EOT > ${FOLDER_MANIFESTS_GKE}/patch_gke.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -73,7 +29,43 @@ spec:
         env:
         - name: spawnable_profiles
           value: ${DOCKERS_JUPYTER_GKE}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy-agent-hub
+spec:
+  template:
+    spec:
+      containers:
+      - name: proxy-agent-hub
+        image: ${DOCKER_AGENT_GKE}
+        imagePullPolicy: Always
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    iam.gke.io/gcp-service-account: ${SA_GKE_HUB}@${PROJECT_ID}.iam.gserviceaccount.com
+  name: agent-runner
+  namespace: default
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    iam.gke.io/gcp-service-account: ${SA_GKE_HUB}@${PROJECT_ID}.iam.gserviceaccount.com
+  name: hub-runner
+  namespace: default
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    iam.gke.io/gcp-service-account: ${SA_GKE_SU}@${PROJECT_ID}.iam.gserviceaccount.com
+  name: singleuser-runner
+  namespace: default
 EOT
 
 # Deploys.
-kustomize build ${FOLDER_MANIFESTS_GKE_WI} | kubectl apply -f -
+kustomize build ${FOLDER_MANIFESTS_GKE} | kubectl apply -f -

@@ -31,14 +31,14 @@ echo "--------------------------------"
 export ZONE="us-west1-b"
 
 # Whether to create a cluster with Workload Identity enabled.
-export WID="false"
+export WID="true"
 
-# Name of the service account for the GKE nodes.
-export SA_GKE_NODES="gke-nodes"
+# Name of the service account for the GKE hub.
+export SA_GKE_HUB="gke-nodes"
+export SA_GKE_SU="gke-singleuser"
 
 export FOLDER_MANIFESTS="../manifests/overlays"
 export FOLDER_MANIFESTS_GKE="${FOLDER_MANIFESTS}/gke"
-export FOLDER_MANIFESTS_GKE_WI="${FOLDER_MANIFESTS}/gke-wi"
 export FOLDER_MANIFESTS_LOCAL="${FOLDER_MANIFESTS}/local"
 
 export DOCKER_FOLDER="../../docker"

@@ -13,6 +13,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+CONFIGFILE=/configmaps/jupyterhub/jupyterhub_config.py
 
-# Starts JupyterHub.
-jupyterhub
+sigint_handler()
+{
+  kill $PID
+  exit
+}
+
+trap sigint_handler SIGINT
+
+if [[ -f $CONFIGFILE ]]; then
+    cp $CONFIGFILE /srv/jupyterhub/jupyterhub_config.py
+fi
+
+while true; do
+  jupyterhub &
+  PID=$!
+  if [[ -f $CONFIGFILE ]]; then
+    inotifywait -e modify -e move -e create -e delete -e attrib $CONFIGFILE
+    cp $CONFIGFILE /srv/jupyterhub/jupyterhub_config.py
+    kill $PID
+  else
+    wait $PID
+  fi
+done

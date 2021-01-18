@@ -64,6 +64,7 @@ def urls_for_zone(zone, location_to_urls_map):
 
 def main():
     unicode_type = functools.partial(unicode, encoding="utf8")
+    unicode_type = str
     parser = argparse.ArgumentParser(description="Get proxy URL")
     parser.add_argument("--config-file-path", required=True, type=unicode_type)
     parser.add_argument("--location", required=True, type=unicode_type)

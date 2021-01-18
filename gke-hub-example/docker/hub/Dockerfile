@@ -43,10 +43,14 @@ RUN pip install --upgrade pip \
     google-cloud-secret-manager \
     pyjwt traitlets 
 
+
 RUN apt-get update && apt-get install -y libpq-dev \
     && apt-get install -y vim \
     && apt-get install -y iproute2 \
     && apt-get autoremove -y \
+    && apt-get clean -y
+
+RUN apt-get update && apt-get install -y inotify-tools \
     && apt-get clean -y
 
 # Installs the authenticator for IAP and Inverting Proxy.
@@ -58,7 +62,8 @@ RUN pip install jupyterhub-kubespawner
 # JupyterHub design
 COPY design/templates/ /etc/jupyterhub/templates/
 
-COPY jupyterhub_config.py .
+# the default config. Will be overwritten by a configmap.
+COPY jupyterhub_config.py /srv/jupyterhub/
 
 EXPOSE 8080
 
