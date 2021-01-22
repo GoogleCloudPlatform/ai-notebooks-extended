@@ -30,9 +30,6 @@ echo "--------------------------------"
 
 export ZONE="us-west1-b"
 
-# Whether to create a cluster with Workload Identity enabled.
-export WID="true"
-
 # Name of the service account for the GKE hub.
 export SA_GKE_HUB="gke-nodes"
 export SA_GKE_SU="gke-singleuser"

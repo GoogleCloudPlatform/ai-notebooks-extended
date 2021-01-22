@@ -25,7 +25,6 @@ MUST_BUILD=$2
 echo "Deploying for TARGET:${TARGET}"
 echo "Working with cluster: ${CLUSTER_NAME}"
 echo "Image to build MUST_BUILD: ${MUST_BUILD}"
-echo "Working Identity is set to: ${WID}"
 echo "--------------------------------"
 
 ###################################
