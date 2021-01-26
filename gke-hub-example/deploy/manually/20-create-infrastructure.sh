@@ -17,6 +17,9 @@
 
 source 10-set-variables.sh
 
+# enable container service
+gcloud services enable container.googleapis.com
+
 # create service account for the hub.
 gcloud iam service-accounts create ${SA_GKE_HUB} --display-name ${SA_GKE_HUB} --project ${PROJECT_ID}
 
