@@ -31,7 +31,8 @@ echo "--------------------------------"
 export ZONE="us-west1-b"
 
 # Name of the service account for the GKE hub.
-export SA_GKE_HUB="gke-nodes"
+export SA_GKE_HUB="gke-hub"
+export SA_GKE_AGENT="gke-agent"
 export SA_GKE_SU="gke-singleuser"
 
 export FOLDER_MANIFESTS="../manifests/overlays"

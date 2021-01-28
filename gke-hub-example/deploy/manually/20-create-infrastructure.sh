@@ -22,15 +22,46 @@ gcloud services enable container.googleapis.com
 
 # create service account for the hub.
 gcloud iam service-accounts create ${SA_GKE_HUB} --display-name ${SA_GKE_HUB} --project ${PROJECT_ID}
+# grant permission to read images from gcr.io/
+gsutil iam ch \
+  serviceAccount:${SA_GKE_HUB}@${PROJECT_ID}.iam.gserviceaccount.com:objectViewer \
+  gs://artifacts.${PROJECT_ID}.appspot.com
+
+# create service account for the agent. This is also the service account of the nodes.
+gcloud iam service-accounts create ${SA_GKE_AGENT} --display-name ${SA_GKE_AGENT} --project ${PROJECT_ID}
+
+# grant a minimal list of permissions to the node account, see
+# https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster#use_least_privilege_sa
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member "serviceAccount:${SA_GKE_AGENT}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role roles/logging.logWriter
 
 gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-  --member serviceAccount:${SA_GKE_HUB}@${PROJECT_ID}.iam.gserviceaccount.com \
-  --role roles/owner
+  --member "serviceAccount:${SA_GKE_AGENT}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role roles/monitoring.metricWriter
+
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member "serviceAccount:${SA_GKE_AGENT}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role roles/monitoring.viewer
+
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member "serviceAccount:${SA_GKE_AGENT}@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role roles/stackdriver.resourceMetadata.writer
+
+# grant permission to read images from gcr.io/
+gsutil iam ch \
+  serviceAccount:${SA_GKE_AGENT}@${PROJECT_ID}.iam.gserviceaccount.com:objectViewer \
+  gs://artifacts.${PROJECT_ID}.appspot.com
 
 # create service account for the single user pods.
 # grant no permissions by default.
 # be very careful or this may give the users root access to the cluster.
 gcloud iam service-accounts create ${SA_GKE_SU} --display-name ${SA_GKE_SU} --project ${PROJECT_ID}
+
+# grant permission to read images from gcr.io/
+gsutil iam ch \
+  serviceAccount:${SA_GKE_SU}@${PROJECT_ID}.iam.gserviceaccount.com:objectViewer \
+  gs://artifacts.${PROJECT_ID}.appspot.com
 
 echo "---------------------------------------------"
 echo "Creating a Workload Identity enabled cluster."
@@ -43,8 +74,8 @@ gcloud beta container clusters create ${CLUSTER_NAME} \
   --enable-ip-alias \
   --num-nodes 1 \
   --scopes cloud-platform,userinfo-email \
-  --service-account ${SA_GKE_HUB}@${PROJECT_ID}.iam.gserviceaccount.com \
-  --machine-type n1-standard-4 \
+  --service-account ${SA_GKE_AGENT}@${PROJECT_ID}.iam.gserviceaccount.com \
+  --machine-type n1-standard-2 \
   --addons ConfigConnector \
   --workload-pool=${PROJECT_ID}.svc.id.goog \
   --enable-stackdriver-kubernetes \
@@ -54,6 +85,17 @@ gcloud beta container clusters create ${CLUSTER_NAME} \
 gcloud container clusters get-credentials ${CLUSTER_NAME} \
   --project ${PROJECT_ID} \
   --zone ${ZONE}
+
+gcloud beta container node-pools create hub-pool \
+  --machine-type n1-standard-2 \
+  --num-nodes 1 \
+  --zone ${ZONE} \
+  --node-labels hub.jupyter.org/node-purpose=hub \
+  --node-taints hub.jupyter.org_dedicated=hub:NoSchedule \
+  --cluster ${CLUSTER_NAME} \
+  --service-account ${SA_GKE_HUB}@${PROJECT_ID}.iam.gserviceaccount.com \
+  --workload-metadata=GKE_METADATA  # Enable WID on the hub pool.
+
 
 gcloud beta container node-pools create user-pool \
   --machine-type n1-standard-2 \
@@ -65,6 +107,7 @@ gcloud beta container node-pools create user-pool \
   --node-taints hub.jupyter.org_dedicated=user:NoSchedule \
   --node-labels hub.jupyter.org/node-purpose=user \
   --cluster ${CLUSTER_NAME} \
+  --service-account ${SA_GKE_SU}@${PROJECT_ID}.iam.gserviceaccount.com \
   --workload-metadata=GKE_METADATA  # Enable WID on the user pool.
 
 # Set up cloud service account for kubernetes service accounts
@@ -80,7 +123,7 @@ ${SA_GKE_SU}@${PROJECT_ID}.iam.gserviceaccount.com
 gcloud iam service-accounts add-iam-policy-binding \
 --role roles/iam.workloadIdentityUser \
 --member "serviceAccount:${PROJECT_ID}.svc.id.goog[default/agent-runner]" \
-${SA_GKE_HUB}@${PROJECT_ID}.iam.gserviceaccount.com
+${SA_GKE_AGENT}@${PROJECT_ID}.iam.gserviceaccount.com
 
 gcloud iam service-accounts add-iam-policy-binding \
 --role roles/iam.workloadIdentityUser \
