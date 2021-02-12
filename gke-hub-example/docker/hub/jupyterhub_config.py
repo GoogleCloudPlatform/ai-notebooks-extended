@@ -19,7 +19,7 @@ import string, random
 
 from tornado import web
 
-from google.cloud import secretmanager_v1beta1 as secretmanager
+from google.cloud import secretmanager_v1 as secretmanager
 
 from kubespawner import KubeSpawner
 
