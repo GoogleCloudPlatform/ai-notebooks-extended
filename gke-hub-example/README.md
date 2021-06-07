@@ -5,9 +5,9 @@
 This folder shows how to deploy notebooks on Google Kubernetes Engine by combining:
 
 1. AI Notebooks architecture: Leverages a modified version of the [Inverting Proxy server][proxy_server] managed by Google and a local [Inverting Proxy agent][proxy_agent] to provide a secure endpoint access to a Hub.
-1. Hub architecture: Using [JupyterHub][jupyterhub], adminstrators can provide a centrally-managed list of notebook environment that end users can spawn on a Kubernetes clusters.
+1. Hub architecture: Using [JupyterHub][jupyterhub], administrators can provide a centrally-managed list of notebook environment that end users can spawn on a Kubernetes clusters.
 
-Administrator can modify official [AI Notebook servers images][ain] to run them on a Google Kubernetes Engine cluster.
+Administrator are responsible for creating notebook server images. This repository shows how to create a simple notebook server in the[docker/jupyter](./docker/jupyter) folder. If you need to run an official [Notebooks image][ain], please log an issue in this repository or support one that might already exist.
 
 ## Folders and file
 

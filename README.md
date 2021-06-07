@@ -1,13 +1,13 @@
 # AI Notebook Extended
 
-Although GCP provides several solutions to run Notebooks, some customers might need to extend existing capabilities. 
+Although GCP provides several solutions to run Notebooks, some customers might need to extend existing capabilities.
 
 This repository leverages some open-source software including:
 
   - [JupyterHub][jupyterhub]: Helps administrator manage users and notebooks configuration centrally.
   - Spawners: Create notebook servers either on the same infrastructure as JupyterHub or on remote servers. [KubeSpawner][kubespawner] and [DataprocSpawner][dataprocspawner] are two possible options amongst others.
   - Authenticators: There are multiple options to log into the JupyterHub interface. The examples of this repository runs on Google Cloud and leverage either Cloud Identity Aware Proxy or the Inverting Proxy. In both cases, authentication is done through the [User Proxy Authenticator for GCP][authenticator]
-  
+
 Google Cloud provide the following tools to run Notebooks:
 
   - AI Plaform Notebooks: Runs single-instance Jupyter notebooks on Compute Engine instances.
@@ -23,7 +23,7 @@ In some case, you might need additional customization options. If this is the ca
     - Provides authentication through [Cloud Identity Aware Proxy][iap]
     - Create notebooks servers on [Dataproc][dataproc]
 
-  - gke-hub-example -- COMING SOON --: Extends AI Platform Notebooks to [Google Kubernetes Engine][gke]
+  - gke-hub-example: Runs custom notebook servers on [Google Kubernetes Engine][gke]
 
     - Runs JupyterHub on a Google Kubernetes Engine cluster
     - Provides authentication through [Inverting Proxy][inverting_proxy]
