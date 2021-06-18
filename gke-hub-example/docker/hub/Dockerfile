@@ -41,7 +41,7 @@ RUN pip install --upgrade pip \
     googleapis-common-protos \
     google-auth-httplib2 \
     google-cloud-secret-manager \
-    pyjwt traitlets 
+    pyjwt traitlets
 
 
 RUN apt-get update && apt-get install -y libpq-dev \
@@ -57,7 +57,7 @@ RUN apt-get update && apt-get install -y inotify-tools \
 RUN pip install git+https://github.com/GoogleCloudPlatform/jupyterhub-gcp-proxies-authenticator
 
 # Installs the relevant Spawner
-RUN pip install jupyterhub-kubespawner
+RUN pip install jupyterhub-kubespawner==0.16.1
 
 # JupyterHub design
 COPY design/templates/ /etc/jupyterhub/templates/
