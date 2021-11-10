@@ -18,7 +18,7 @@ import socket
 
 from tornado import web
 
-from google.cloud import secretmanager_v1beta1 as secretmanager
+from google.cloud import secretmanager_v1 as secretmanager
 
 
 def access_secret_version(project_id, secret_id, version_id):
