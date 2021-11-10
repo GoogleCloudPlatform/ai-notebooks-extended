@@ -27,6 +27,13 @@ spec:
       labels:
         app: jupyterlab-hub
     spec:
+      nodeSelector:
+        hub.jupyter.org/node-purpose: hub
+      tolerations:
+      - key: hub.jupyter.org_dedicated
+        operator: Equal
+        value: hub
+        effect: NoSchedule
       containers:
       - name: jupyterlab-hub
         # Image added by kustomize here.
